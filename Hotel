@@ -1,0 +1,146 @@
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+class Hotel {
+    private String name;
+    private String location;
+    private List<Review> reviews;
+
+    public Hotel(String name, String location) {
+        this.name = name;
+        this.location = location;
+        this.reviews = new ArrayList<>();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public List<Review> getReviews() {
+        return reviews;
+    }
+
+    public void addReview(Review review) {
+        reviews.add(review);
+    }
+
+    public double getAverageRating() {
+        return reviews.stream()
+                .mapToInt(Review::getRating)
+                .average()
+                .orElse(0);
+    }
+}
+
+class Review {
+    private String user;
+    private int rating; // Rating out of 5
+    private String comment;
+
+    public Review(String user, int rating, String comment) {
+        this.user = user;
+        this.rating = rating;
+        this.comment = comment;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+}
+
+class HotelReviewSystem {
+    private List<Hotel> hotels;
+
+    public HotelReviewSystem() {
+        hotels = new ArrayList<>();
+    }
+
+    public void addHotel(Hotel hotel) {
+        hotels.add(hotel);
+    }
+
+    public List<Hotel> getHotels() {
+        return hotels;
+    }
+
+    // Sorting by average rating
+    public List<Hotel> sortByRating(boolean ascending) {
+        return hotels.stream()
+                .sorted(Comparator.comparingDouble(Hotel::getAverageRating)
+                .reversed().thenComparing(ascending ? Comparator.comparingDouble(Hotel::getAverageRating) : Comparator.comparingDouble(Hotel::getAverageRating).reversed()))
+                .collect(Collectors.toList());
+    }
+
+    // Filtering by minimum rating
+    public List<Hotel> filterByRating(int minRating) {
+        return hotels.stream()
+                .filter(hotel -> hotel.getAverageRating() >= minRating)
+                .collect(Collectors.toList());
+    }
+
+    // Filtering by location
+    public List<Hotel> filterByLocation(String location) {
+        return hotels.stream()
+                .filter(hotel -> hotel.getLocation().equalsIgnoreCase(location))
+                .collect(Collectors.toList());
+    }
+
+    // Display hotels
+    public void displayHotels(List<Hotel> hotelsList) {
+        for (Hotel hotel : hotelsList) {
+            System.out.println("Hotel: " + hotel.getName() + " | Location: " + hotel.getLocation() + 
+                               " | Avg Rating: " + String.format("%.2f", hotel.getAverageRating()));
+            for (Review review : hotel.getReviews()) {
+                System.out.println("  - Review by " + review.getUser() + ": Rating: " + review.getRating() + 
+                                   " Comment: " + review.getComment());
+            }
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        HotelReviewSystem system = new HotelReviewSystem();
+
+        Hotel hotel1 = new Hotel("Hotel Sunshine", "New York");
+        hotel1.addReview(new Review("Alice", 5, "Excellent stay!"));
+        hotel1.addReview(new Review("Bob", 4, "Great service!"));
+        
+        Hotel hotel2 = new Hotel("Moonlight Inn", "Los Angeles");
+        hotel2.addReview(new Review("Charlie", 3, "Good but could be better."));
+        
+        Hotel hotel3 = new Hotel("Ocean View", "Miami");
+        hotel3.addReview(new Review("David", 4, "Very relaxing place."));
+        hotel3.addReview(new Review("Eve", 5, "Loved the beach view!"));
+
+        system.addHotel(hotel1);
+        system.addHotel(hotel2);
+        system.addHotel(hotel3);
+
+        System.out.println("All Hotels:");
+        system.displayHotels(system.getHotels());
+
+        System.out.println("\nHotels sorted by rating (descending):");
+        system.displayHotels(system.sortByRating(false));
+
+        System.out.println("\nHotels with rating >= 4:");
+        system.displayHotels(system.filterByRating(4));
+
+        System.out.println("\nHotels in New York:");
+        system.displayHotels(system.filterByLocation("New York"));
+    }
+}
